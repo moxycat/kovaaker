@@ -37,6 +37,7 @@ class KovaakerClient:
         }.get(f)
 
     def scenario_leaderboard(self, id: int, start_page=0, per_page=10, max_page=-1, by_page=True, filter_: LeaderboardFilter=LeaderboardFilter.GLOBAL) -> list[Score]:
+        # todo: add username filtering
         endpoint = self._endpoint_for(filter_)
         for offset in (itertools.count() if max_page == -1 else range(max_page)):
             resp = self.session.get(endpoint % (id, start_page + offset, per_page))
@@ -76,9 +77,12 @@ class KovaakerClient:
         resp.raise_for_status()
         return resp.json()["total"]
     
-    def popular_scenarios(self, start_page=0, per_page=10, max_page=-1, by_page=True) -> list[Scenario]:
+    def scenario_search(self, query: str=None, start_page=0, per_page=10, max_page=-1, by_page=True) -> list[Scenario]:
         for offset in (itertools.count() if max_page == -1 else range(max_page)):
-            resp = self.session.get(POPULAR_SCENARIOS % (start_page + offset, per_page))
+            if query is None:
+                resp = self.session.get(POPULAR_SCENARIOS % (start_page + offset, per_page))
+            else:
+                resp = self.session.get(POPULAR_SCENARIOS_SEARCH % (start_page + offset, per_page, query))
             resp.raise_for_status()
             
             result = [Scenario(
